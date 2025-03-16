@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .rewrite{
+	margin: 30px;
+	display: inline-block;
+	font-family: Helvetica, Arial, sans-serif;
+	font-size: 4em;
+	height: 1em;
+	border-right: 3px solid black;
+	text-align: center;
+}
+.credits{
+	margin: 20px;
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+	color: #444;
+	text-align: right;
+}
+.container{
+	height:7em;
+    position:absolute;
+    top:50%;
+    left:50%;
+	text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+body{
+	background: #eee;
+}
+.statistics {
+    margin: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #444;
+    text-align: center;
+}
+    </style>
+</head>
+<body>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<div class="container"><span class="rewrite">Benvenuto</span></div>
+<div class="statistics" id="statistics">Loading statistics...</div>
+<script>
+var dictionary = ["Benvenuto", "Welcome", "Bienvenido", "Willkommen", "That's all, Folks!"];
+var word = dictionary[0];
+var j = 0;
+var count = dictionary.length;
+var tick = 2000;
+var i = word.length, max = word.length;
+var fase = 1;
+var myFunction = function(){
+	clearInterval(interval);
+	stopBarAnimation();
+	tick = 125;
+	if(fase == 0){
+		i++;
+		if(i==max){
+			barAnimation(300);
+			tick = 2000;
+			fase = 1;
+		}
+	}else{
+		i--;
+		if(i==0){
+			barAnimation(300);
+			tick = 1500;
+			j++;
+			word = dictionary[j%count];
+			max = word.length;
+			fase = 0;
+		}
+	}
+	$(".rewrite").text(word.substring(0,i));
+  interval = setInterval(myFunction, tick);
+}
+var barInterval;
+function stopBarAnimation(){
+	clearInterval(barInterval);
+	$(".rewrite").css("border-right", "3px solid black");
+}
+function barAnimation(tick, counter = 0){
+			barInterval = setInterval(function(){
+				if(counter%2){
+					$(".rewrite").css("border-right", "3px solid transparent");
+				}else{
+					$(".rewrite").css("border-right", "3px solid black");
+				}
+				counter++;
+			}, tick);
+}
+var interval = setInterval(myFunction, tick);
+barAnimation(300);
+
+async function fetchStatistics() {
+    const repo = "You-now-Who/jank-code-db"; // Your GitHub repo
+    const path = "ur-cooked/logs/statistics.json"; // Path to the file in repo
+
+    // Load token securely
+    const config = await fetch("config.json")
+        .then((response) => response.json())
+        .catch((error) => {
+            console.error("Failed to load config.json", error);
+            return {};
+        });
+
+    const token = config.githubToken; // Get token from config.json
+    if (!token) {
+        console.error("GitHub token not found! Make sure config.json is set up.");
+        return;
+    }
+
+    // Fetch statistics from GitHub
+    const response = await fetch(
+        `https://api.github.com/repos/${repo}/contents/${path}`,
+        {
+            headers: { Authorization: `token ${token}` },
+        }
+    );
+
+    if (response.ok) {
+        const data = await response.json();
+        const content = atob(data.content); // Decode Base64 content
+        const statistics = JSON.parse(content);
+        displayStatistics(statistics);
+    } else {
+        console.error("Failed to fetch statistics from GitHub:", response.statusText);
+    }
+}
+
+function displayStatistics(statistics) {
+    const statsDiv = document.getElementById("statistics");
+    statsDiv.innerHTML = `
+        <p>Statistic 1: ${statistics.stat1}</p>
+        <p>Statistic 2: ${statistics.stat2}</p>
+        <p>Statistic 3: ${statistics.stat3}</p>
+        <p>Statistic 4: ${statistics.stat4}</p>
+    `;
+}
+
+// Fetch statistics initially and then every 30-60 seconds
+fetchStatistics();
+setInterval(fetchStatistics, 30000); // Update every 30 seconds
+
+</script>
+</body>
+</html>
